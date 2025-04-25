@@ -1,93 +1,131 @@
 # SolidesDataSyncer
 
-🌟 Gem para sincronização de dados com uma base MongoDB do Projeto SolidesDataSyncer, feita para ser usada em projetos Ruby ou Ruby on Rails.
+Uma gem Ruby para sincronização de dados com o MongoDB Atlas.
 
----
+## ✨ Funcionalidades
 
-## 📦 Instalação
+- Conexão segura com o MongoDB Atlas
+- Inserção e atualização de usuários
+- Listagem de usuários em ordem decrescente de criação
+- Fallback seguro: falhas na conexão com MongoDB não quebram sua aplicação
 
-Adicione esta linha ao seu `Gemfile`:
+## 🚀 Instalação
+
+Adicione esta linha ao seu Gemfile:
 
 ```ruby
-gem 'solides_data_syncer', github: 'jorge29toledo/solides_data_syncer', tag: 'v0.1.0'
+gem 'solides_data_syncer', git: 'https://github.com/jorge29toledo/solides_data_syncer.git'
 ```
 
-Depois execute:
+E depois execute:
 
-```bash
+```sh
 bundle install
 ```
 
----
+Ou instale manualmente:
 
-## ⚙️ Configuração
+```sh
+gem install solids_data_syncer-0.1.0.gem
+```
 
-Esta gem usa a URI do MongoDB a partir da variável de ambiente `MONGODB_URI`.
+## 🔧 Configuração
 
-Crie um arquivo `.env` na raiz do seu projeto Rails (ou Ruby puro):
+Crie um arquivo `.env` na raiz do seu projeto com sua URI do MongoDB Atlas:
 
 ```env
-MONGODB_URI=mongodb+srv://usuario:senha@host.mongodb.net
+MONGO_DB_NAME=db_name
+MONGO_COLLECTION_NAME=collection_name
+MONGODB_URI=mongodb+srv://<usuario>:<senha>@<host>/<dbname>?retryWrites=true&w=majority
 ```
 
-> Recomendado: copie o exemplo `cp .env.example .env`
+Ou defina diretamente no ambiente:
 
-Use `dotenv-rails` (no Rails) para carregar o `.env` automaticamente:
+```sh
+export MONGODB_URI='mongodb+srv://<usuario>:<senha>@<host>/<dbname>?retryWrites=true&w=majority'
+```
+## ✅ Tratamento de erros
 
-```ruby
-# Gemfile
-gem 'dotenv-rails', groups: [:development, :test]
+Se a conexão com o MongoDB falhar, a gem imprimirá um aviso no log e continuará a execução do programa sem interromper sua aplicação:
+
+```sh
+⚠️  Conexão com MongoDB não estabelecida. Operações serão ignoradas.
 ```
 
----
+## 🧪 Exemplo de uso
 
-## 🚀 Uso
+## 🧰 Uso com Ruby
 
 ```ruby
-require 'solides_data_syncer'
+require 'dotenv/load'
+require_relative 'lib/solides_data_syncer'
 
 syncer = SolidesDataSyncer::Syncer.new(
-  db_name: 'sample_mflix',
-  collection_name: 'users'
+  db_name: "#{ENV["MONGO_DB_NAME"]}",
+  collection_name: "#{ENV["MONGO_COLLECTION_NAME"]}"
 )
 
+# Inserir ou atualizar usuário
 if syncer.connected?
-  users = syncer.find_users(limit: 10)
-  puts users
+  syncer.add_or_update_user(
+    name: "Huguinho Silva",
+    email: "huguinhosilva@gameofthron.es",
+    password: "$xpto"
+  )
+
+  syncer.find_users(limit: 2)
 else
-  puts "❌ Não conectado ao MongoDB"
+  puts "❌ Sem conexão com o MongoDB"
 end
 ```
 
----
+## 🧰 Uso com Ruby on Rails
 
-## 💠 Funcionalidades
+Se você estiver usando a gem `solides_data_syncer` dentro de um projeto **Rails**, é possível configurar um helper para facilitar a reutilização da conexão com o MongoDB.
 
-- ✅ Conecta com MongoDB Atlas
-- ✅ Consulta documentos
-- ✅ Insere e atualiza usuários (com upsert)
-- ✅ Ordenação por criação (`created_at`)
-- ✅ Validação automática da URI
-- ✅ Preparado para Rails 4 até 8+
+### 1. Adicione variáveis de ambiente no seu projeto Rails
 
----
+No `.env`:
 
-## 📂 Estrutura da gem
-
-```text
-lib/
-└── solides_data_syncer/
-    ├── mongo_client.rb      # Conexão com MongoDB
-    ├── syncer.rb            # Interface principal
-    ├── errors.rb            # Erros customizados
-    └── version.rb           # Versão da gem
+```env
+MONGODB_URI=mongodb+srv://<seu_usuario>:<sua_senha>@<seu_cluster>.mongodb.net/
+MONGO_DB_NAME=db_name
+MONGO_COLLECTION_NAME=collection_name
 ```
 
----
+### 2. Crie um initializer
 
-## 📁 Licença
+Em `config/initializers/solides_data_syncer.rb`:
 
-MIT © [Jorge Toledo](https://github.com/jorge29toledo)
+```ruby
+if defined?(Rails)
+  SolidesDataSyncer::RailsHelper.syncer
+end
+```
 
----
+### 3. Use em models ou controllers
+
+```ruby
+SolidesDataSyncer::RailsHelper.syncer.add_or_update_user(
+  name: "Arya Stark",
+  email: "arya@winterfell.north",
+  password: "valarMorghulis"
+)
+```
+
+> ⚠️ **Importante**: O helper `RailsHelper` é carregado apenas quando o ambiente Rails é detectado (`defined?(Rails)`), então o uso da gem em scripts Ruby puros continua funcionando normalmente.
+
+## 🧰 Desenvolvimento
+
+Para contribuir:
+
+```sh
+git clone https://github.com/jorge29toledo/solides_data_syncer.git
+cd solides_data_syncer
+bundle install
+```
+
+## 📄 Licença
+
+MIT © [jorge29toledo](https://github.com/jorge29toledo)
 
